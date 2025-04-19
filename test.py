@@ -13,7 +13,7 @@ def read_root():
 def read_root():
     return {"message": "bye bye"}
 
-@app.get("/say_bye")
+@app.get("/say_bye2")
 def read_root():
     return {"message": "bye bye"}
 
