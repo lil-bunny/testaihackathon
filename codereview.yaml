@@ -1,6 +1,8 @@
 code_review_checklist:
   - Code should be DRY (Don’t Repeat Yourself)
   - There should not be any secrets or credentials in the code
+  - Code shouldnot have any security vulnerabilities
+  - Code shouldnt have any logial errors
   # - Code should be readable and easy to understand
   # - Functions should be small and do one thing well
   # - Variables and functions should have clear, meaningful names
