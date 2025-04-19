@@ -1,0 +1,25 @@
+code_review_checklist:
+  - Code should be DRY (Don’t Repeat Yourself)
+  - There should not be any secrets or credentials in the code
+  - Code should be readable and easy to understand
+  - Functions should be small and do one thing well
+  - Variables and functions should have clear, meaningful names
+  - Code should follow consistent formatting and style conventions
+  - Proper error handling should be implemented
+  - User input should be validated and sanitized
+  - Avoid hardcoded values where configuration is better
+  - Dependencies should be necessary and up-to-date
+  - Unused code or commented-out blocks should be removed
+  - Sensitive logic should be protected against misuse
+  - API requests/responses should match the expected contract
+  - Logs should not expose sensitive information
+  - Test cases should cover both typical and edge cases
+  - Avoid deep nesting – try to keep control flow simple
+  - Code should be modular and reusable
+  - Comments should explain why something is done, not what
+  - Avoid using magic numbers or strings – use named constants
+  - Ensure all database or network calls are safe and optimized
+  - The code should not break existing functionality
+  - No debug or console logs should be left in production code
+  - Performance bottlenecks should be identified and avoided
+  - UI should be accessible and responsive (if applicable)
