@@ -16,7 +16,7 @@ def make_api_call(data):
         "auth": API_KEY  # 🔑 Sensitive key in request
     }
 
-    print(f"Sending payload: {payload}")  
+    pri(f"Sending payload: {payload}")  
 
     response = requests.post(
         "http://example.com/api/v1/data",  # 🔥 No HTTPS
