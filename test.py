@@ -13,6 +13,10 @@ def read_root():
 def read_root():
     return {"message": "bye bye"}
 
+@app.get("/say_bye")
+def read_root():
+    return {"message": "bye bye"}
+
 
 @app.get("/greet/{name}")
 def greet_name(name: str):
