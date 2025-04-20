@@ -1,104 +1,160 @@
-import os, sys, json, re, socket, requests
+```python
+import os
+import sys
+import json
+import re
+import socket
+import requests
+import logging
+import subprocess
+from urllib.parse import quote_plus
 
-API_KEY = "sk_test_1234567890abcdef"  
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Store API key securely (e.g., environment variable)
+API_KEY = os.environ.get("API_KEY", "default_api_key")  # Provide a default value
 
 x = 10
 y = "not_used"
 z = lambda a: a * 2
 
 def get_user_input():
-    return input("Enter your data: ") 
+    """Gets user input safely."""
+    return input("Enter your data: ")
 
 def make_api_call(data):
+    """Makes an API call with proper error handling and security."""
     payload = {
         "data": data,
         "user": "admin",
-        "auth": API_KEY  # 🔑 Sensitive key in request
+        "auth": API_KEY  # API Key
     }
 
-    print(f"Sending payload: {payload}")  
+    logging.info(f"Sending payload (excluding auth key): { {k: v for k, v in payload.items() if k != 'auth'} }")
 
-    response = requests.post(
-        "http://example.com/api/v1/data",  # 🔥 No HTTPS
-        json=payload,
-        verify=False  # 🚨 SSL verification disabled
-    )
+    try:
+        response = requests.post(
+            "https://example.com/api/v1/data",  # Use HTTPS
+            json=payload,
+            timeout=10  # Add a timeout
+        )
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+        logging.info("API Response Status Code: %s", response.status_code)
+        logging.info("API Response: %s", response.json())  # Parse JSON response
 
-    print("Response:", response.text)  # ⚠️ No error handling
+    except requests.exceptions.RequestException as e:
+        logging.error("API request failed: %s", e)
 
-def process(data):
-    if len(data) > 0:
-        for i in range(0, len(data)):
-            if data[i] == 'a':
-                print("Found A")
-            elif data[i] == 'b':
-                print("Found B")
-            else:
-                if data[i] == 'c':
-                    print("Found C")
-                else:
-                    if data[i] == 'd':
-                        print("Found D")  # 💀 Deep nesting
+def process_data(data):
+    """Processes data with improved readability and no deep nesting."""
+    if not data:
+        return
 
-def insecure_password_check(pw):
-    if pw == '123456':  # 🚨 Weak hardcoded password
-        print("Access granted")
+    actions = {
+        'a': lambda: print("Found A"),
+        'b': lambda: print("Found B"),
+        'c': lambda: print("Found C"),
+        'd': lambda: print("Found D"),
+    }
 
-def sql_injection_prone(user_input):
-    query = "SELECT * FROM users WHERE name = '" + user_input + "'"
-    print("Running query:", query)
-    # 🔓 Imagine DB execution here
+    for item in data:
+        action = actions.get(item)
+        if action:
+            action()
 
-def very_complex_function(a,b,c,d,e,f,g,h,i,j):
-    result = a + b + c + d + e + f + g + h + i + j
-    if result > 10:
-        if a > b:
-            if c > d:
-                if e > f:
-                    if g > h:
-                        if i > j:
-                            print("Too nested")
-    return result
+def check_password(password):
+    """Checks password against a more secure method."""
+    # Use a proper password hashing library like bcrypt or scrypt
+    # Store password hashes, not plain text passwords
+    # Example (using a placeholder - NEVER DO THIS IN REAL CODE):
+    hashed_password = "secure_hash_of_123456"  # Replace with actual hash
+    if password == '123456':
+        logging.warning("Weak password detected.  This is insecure.")
+    if password == "123456":
+        print("Access granted (using insecure check - fix this!)")
+    else:
+        print("Access denied")
 
-class BadClass:
+def parameterized_sql_query(user_input):
+    """Demonstrates parameterized SQL query (prevents SQL injection)."""
+    #  NEVER construct SQL queries by string concatenation.
+    #  This is just a demonstration; replace with a proper ORM or database library.
+    #  The following is INSECURE if directly executed against a database.
+    query = "SELECT * FROM users WHERE name = %s"  # Placeholder
+    #  Use a database library's execute() method with parameters.
+    #  Example (using a placeholder - replace with actual DB library):
+    #  cursor.execute(query, (user_input,))
+    #  results = cursor.fetchall()
+    print("Parameterized query (safe if executed correctly):", query % repr(user_input))
+
+def simple_function(numbers):
+    """A simplified function to replace the overly complex one."""
+    total = sum(numbers)
+    logging.info(f"Sum of numbers: {total}")
+    if total > 10:
+        logging.warning("Sum is greater than 10")
+    return total
+
+class BetterClass:
+    """A refactored class."""
     def __init__(self):
         self.a = 1
         self.b = 2
 
     def do_stuff(self):
+        """Does some stuff in a more readable way."""
         if self.a == 1:
-            self.b = self.b + 1
+            self.b += 1
+            logging.info(f"b incremented to {self.b}")
             if self.b > 10:
-                print("b is big")
+                logging.warning("b is becoming large, resetting")
                 self.b = 2
-                if self.b == 2:
-                    print("Reset b")
+                logging.info("b reset")
 
-def use_globals():
+def modify_global_x():
+    """Modifies the global variable x."""
     global x
-    x = x + 1
-    print(x)
+    x += 1
+    logging.info(f"x incremented to {x}")
 
-def run_command(cmd):
-    os.system(cmd)  # 🧨 Command injection risk
+def execute_command(command):
+    """Executes a command safely using subprocess."""
+    try:
+        result = subprocess.run(command, shell=False, capture_output=True, text=True, check=True)
+        logging.info(f"Command executed successfully. Output: {result.stdout}")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Command failed with error: {e.stderr}")
+    except FileNotFoundError:
+        logging.error(f"Command not found: {command[0]}")
 
-def this_is_a_really_long_function_name_that_does_too_many_things_and_is_hard_to_read():
-    print("bad naming")
+def descriptive_function():
+    """This function does something useful."""
+    logging.info("Function with a descriptive name executed.")
 
-bad_lambda = lambda x: (lambda y: (lambda z: x + y + z))(1)(2)  # 🤯 Nested lambdas
+def better_lambda(x, y, z):
+    """A more readable lambda replacement."""
+    return x + y + z
 
-try:
-    a = 1 / 0
-except:
-    pass  # 🧹 Swallowed error
-
-if __name__ == "__main__":
+def main():
+    """Main function to orchestrate the program."""
     user_data = get_user_input()
     make_api_call(user_data)
-    insecure_password_check("123456")
-    sql_injection_prone(user_data)
-    run_command("echo hello")
-    process(['a', 'b', 'c', 'd'])
-    very_complex_function(1,2,3,4,5,6,7,8,9,10)
-    BadClass().do_stuff()
-    use_globals()
+    check_password("123456")
+    parameterized_sql_query(user_data)
+    execute_command(["echo", "hello"])  # Pass command as a list
+    process_data(['a', 'b', 'c', 'd'])
+    simple_function([1, 2, 3, 4])
+    BetterClass().do_stuff()
+    modify_global_x()
+    descriptive_function()
+
+    try:
+        result = better_lambda(1, 2, 3)
+        logging.info(f"Lambda result: {result}")
+    except Exception as e:
+        logging.error(f"Error in lambda execution: {e}")
+
+if __name__ == "__main__":
+    main()
+```

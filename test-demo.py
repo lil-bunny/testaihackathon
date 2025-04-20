@@ -1,3 +1,4 @@
+```python
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -9,3 +10,4 @@ def read_root():
 @app.get("/greet/{name}")
 def greet_name(name: str):
     return {"greeting": f"Hello, {name}!"}
+```
