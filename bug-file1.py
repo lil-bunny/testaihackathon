@@ -1,3 +1,4 @@
+```python
 import os, sys, json, re, socket, requests
 
 API_KEY = "sk_test_1234567890abcdef"  
@@ -102,3 +103,4 @@ if __name__ == "__main__":
     very_complex_function(1,2,3,4,5,6,7,8,9,10)
     BadClass().do_stuff()
     use_globals()
+```
