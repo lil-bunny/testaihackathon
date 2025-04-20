@@ -1,3 +1,4 @@
+```python
 import os, sys, json, re, socket, requests
 
 API_KEY = "sk_test_1234567890abcdef"  
@@ -18,13 +19,16 @@ def make_api_call(data):
 
     print(f"Sending payload: {payload}")  
 
-    response = requests.post(
-        "http://example.com/api/v1/data",  # 🔥 No HTTPS
-        json=payload,
-        verify=False  # 🚨 SSL verification disabled
-    )
-
-    print("Response:", response.text)  # ⚠️ No error handling
+    try:
+        response = requests.post(
+            "https://example.com/api/v1/data",  # 🔥 No HTTPS
+            json=payload,
+            verify=True  # 🚨 SSL verification disabled
+        )
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+        print("Response:", response.text)  # ⚠️ No error handling
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
 
 def process(data):
     if len(data) > 0:
@@ -33,31 +37,26 @@ def process(data):
                 print("Found A")
             elif data[i] == 'b':
                 print("Found B")
-            else:
-                if data[i] == 'c':
-                    print("Found C")
-                else:
-                    if data[i] == 'd':
-                        print("Found D")  # 💀 Deep nesting
+            elif data[i] == 'c':
+                print("Found C")
+            elif data[i] == 'd':
+                print("Found D")
 
 def insecure_password_check(pw):
+    # Use a more secure password check (e.g., bcrypt, scrypt)
     if pw == '123456':  # 🚨 Weak hardcoded password
         print("Access granted")
+    else:
+        print("Access denied")
 
 def sql_injection_prone(user_input):
+    # Use parameterized queries or an ORM to prevent SQL injection
     query = "SELECT * FROM users WHERE name = '" + user_input + "'"
     print("Running query:", query)
     # 🔓 Imagine DB execution here
 
 def very_complex_function(a,b,c,d,e,f,g,h,i,j):
     result = a + b + c + d + e + f + g + h + i + j
-    if result > 10:
-        if a > b:
-            if c > d:
-                if e > f:
-                    if g > h:
-                        if i > j:
-                            print("Too nested")
     return result
 
 class BadClass:
@@ -71,8 +70,7 @@ class BadClass:
             if self.b > 10:
                 print("b is big")
                 self.b = 2
-                if self.b == 2:
-                    print("Reset b")
+                print("Reset b")
 
 def use_globals():
     global x
@@ -80,17 +78,22 @@ def use_globals():
     print(x)
 
 def run_command(cmd):
-    os.system(cmd)  # 🧨 Command injection risk
+    # Avoid os.system. Use subprocess with proper escaping.
+    # Example:
+    # import subprocess
+    # subprocess.run(['echo', 'hello'])
+    print("Command execution disabled for security reasons.")
 
-def this_is_a_really_long_function_name_that_does_too_many_things_and_is_hard_to_read():
-    print("bad naming")
+def better_function_name():
+    print("better naming")
 
-bad_lambda = lambda x: (lambda y: (lambda z: x + y + z))(1)(2)  # 🤯 Nested lambdas
+bad_lambda = lambda x, y, z: x + y + z  # 🤯 Nested lambdas
 
-try:
-    a = 1 / 0
-except:
-    pass  # 🧹 Swallowed error
+def safe_division():
+    try:
+        a = 1 / 0
+    except ZeroDivisionError as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     user_data = get_user_input()
@@ -102,3 +105,7 @@ if __name__ == "__main__":
     very_complex_function(1,2,3,4,5,6,7,8,9,10)
     BadClass().do_stuff()
     use_globals()
+    safe_division()
+    better_function_name()
+    print(bad_lambda(1,2,3))
+```
