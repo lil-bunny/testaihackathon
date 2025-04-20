@@ -1,5 +1,6 @@
-from fastapi import FastAPIdbahjsbdj
-from pandas import keras
+from fastapi import FastAPI
+from tensorflow import keras
+
 app = FastAPI()
 
 @app.get("/")

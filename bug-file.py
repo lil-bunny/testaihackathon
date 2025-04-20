@@ -1,104 +1,152 @@
-import os, sys, json, re, socket, requests
+```python
+import os
+import sys
+import json
+import re
+import socket
+import requests
+import logging
+import subprocess
+from urllib.parse import quote_plus
 
-API_KEY = "sk_test_1234567890abcdef"  
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Store API key securely (e.g., environment variable)
+API_KEY = os.environ.get("API_KEY", "default_api_key")  # Provide a default for local testing
 
 x = 10
 y = "not_used"
 z = lambda a: a * 2
 
 def get_user_input():
-    return input("Enter your data: ") 
+    """Gets user input safely."""
+    return input("Enter your data: ")
 
 def make_api_call(data):
+    """Makes an API call with proper error handling and security."""
     payload = {
         "data": data,
-        "user": "admin",
-        "auth": API_KEY  # 🔑 Sensitive key in request
+        "user": "api_user",  # Avoid using "admin"
+        "auth": API_KEY
     }
 
-    print(f"Sending payload: {payload}")  
+    logging.info(f"Sending payload (without sensitive data): {json.dumps({k: v if k != 'auth' else '****' for k, v in payload.items()})}")
 
-    response = requests.post(
-        "http://example.com/api/v1/data",  # 🔥 No HTTPS
-        json=payload,
-        verify=False  # 🚨 SSL verification disabled
-    )
+    try:
+        response = requests.post(
+            "https://example.com/api/v1/data",  # Use HTTPS
+            json=payload,
+            verify=True,  # Enable SSL verification
+            timeout=10  # Add a timeout
+        )
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+        logging.info(f"Response status code: {response.status_code}")
+        logging.info("Response: %s", response.text)
 
-    print("Response:", response.text)  # ⚠️ No error handling
+    except requests.exceptions.RequestException as e:
+        logging.error(f"API call failed: {e}")
 
 def process(data):
-    if len(data) > 0:
-        for i in range(0, len(data)):
-            if data[i] == 'a':
-                print("Found A")
-            elif data[i] == 'b':
-                print("Found B")
-            else:
-                if data[i] == 'c':
-                    print("Found C")
-                else:
-                    if data[i] == 'd':
-                        print("Found D")  # 💀 Deep nesting
+    """Processes data with reduced nesting."""
+    if not data:
+        return
+
+    for item in data:
+        if item == 'a':
+            print("Found A")
+        elif item == 'b':
+            print("Found B")
+        elif item == 'c':
+            print("Found C")
+        elif item == 'd':
+            print("Found D")
+        else:
+            print(f"Found other: {item}") # Handle other cases explicitly
 
 def insecure_password_check(pw):
-    if pw == '123456':  # 🚨 Weak hardcoded password
-        print("Access granted")
+    """Checks password against a list of common passwords."""
+    weak_passwords = ["123456", "password", "qwerty"]  # Expand this list
+    if pw in weak_passwords:
+        print("Weak password detected. Access denied.")
+    else:
+        print("Access granted.")  # In real scenario, use proper authentication
 
 def sql_injection_prone(user_input):
-    query = "SELECT * FROM users WHERE name = '" + user_input + "'"
-    print("Running query:", query)
-    # 🔓 Imagine DB execution here
+    """Demonstrates SQL injection vulnerability.  DO NOT USE THIS IN PRODUCTION."""
+    #  Instead of direct string formatting, use parameterized queries with a proper ORM or database library.
+    #  This example only prints the query; it does NOT execute it.
+    safe_user_input = quote_plus(user_input) # Sanitize input (example, not complete protection)
+    query = f"SELECT * FROM users WHERE name = '{safe_user_input}'"
+    print("Generated query (for demonstration only, not executed):", query)
 
-def very_complex_function(a,b,c,d,e,f,g,h,i,j):
-    result = a + b + c + d + e + f + g + h + i + j
+def very_complex_function(a, b, c, d, e, f, g, h, i, j):
+    """A simplified function to avoid deep nesting."""
+    result = sum([a, b, c, d, e, f, g, h, i, j])
     if result > 10:
-        if a > b:
-            if c > d:
-                if e > f:
-                    if g > h:
-                        if i > j:
-                            print("Too nested")
+        conditions = [a > b, c > d, e > f, g > h, i > j]
+        if all(conditions):
+            print("All sub-conditions met")
     return result
 
-class BadClass:
+class BetterClass:
+    """A better class example."""
     def __init__(self):
         self.a = 1
         self.b = 2
 
     def do_stuff(self):
+        """Does some stuff with less nesting."""
         if self.a == 1:
-            self.b = self.b + 1
+            self.b += 1
             if self.b > 10:
                 print("b is big")
                 self.b = 2
-                if self.b == 2:
-                    print("Reset b")
+            print("Reset b (maybe)") # Moved outside the inner if
 
 def use_globals():
+    """Modifies a global variable."""
     global x
-    x = x + 1
-    print(x)
+    x += 1
+    print(f"Global x is now: {x}")
 
 def run_command(cmd):
-    os.system(cmd)  # 🧨 Command injection risk
+    """Runs a command using subprocess to avoid command injection."""
+    try:
+        result = subprocess.run(cmd, shell=False, capture_output=True, text=True, check=True)
+        print("Command output:", result.stdout)
+        print("Command errors:", result.stderr)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Command failed: {e}")
+    except FileNotFoundError:
+        logging.error(f"Command not found: {cmd[0]}")
 
-def this_is_a_really_long_function_name_that_does_too_many_things_and_is_hard_to_read():
-    print("bad naming")
+def better_named_function():
+    """A function with a descriptive name."""
+    print("Doing something useful")
 
-bad_lambda = lambda x: (lambda y: (lambda z: x + y + z))(1)(2)  # 🤯 Nested lambdas
+# Avoid nested lambdas; they're hard to read.  Use a regular function instead.
+def add_three_numbers(x, y, z):
+    return x + y + z
 
-try:
-    a = 1 / 0
-except:
-    pass  # 🧹 Swallowed error
+def handle_division():
+    """Handles potential division by zero errors."""
+    try:
+        a = 1 / 0
+    except ZeroDivisionError as e:
+        logging.error(f"Division by zero error: {e}")
 
 if __name__ == "__main__":
     user_data = get_user_input()
     make_api_call(user_data)
     insecure_password_check("123456")
     sql_injection_prone(user_data)
-    run_command("echo hello")
-    process(['a', 'b', 'c', 'd'])
-    very_complex_function(1,2,3,4,5,6,7,8,9,10)
-    BadClass().do_stuff()
+    run_command(["echo", "hello"]) # Pass command as a list
+    process(['a', 'b', 'c', 'd', 'e'])
+    very_complex_function(1, 2, 3, 4, 5, 1, 1, 1, 1, 1)
+    BetterClass().do_stuff()
     use_globals()
+    better_named_function()
+    print(add_three_numbers(1,2,3))
+    handle_division()
+```
